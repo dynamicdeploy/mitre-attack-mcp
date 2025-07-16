@@ -1425,15 +1425,11 @@ def main():
 
     args = parser.parse_args()
 
-    # Create the data directory if it doesn't exist
-    if not os.path.exists(args.data_path):
-        os.makedirs(args.data_path)
-
     # Check if data files exist in the specified path
     data_exists = all(
         os.path.exists(
             os.path.join(
-                args.data_path,
+                args.data_dir,
                 "v" + release_info.LATEST_VERSION,
                 f"{domain}-attack.json",
             )
@@ -1443,10 +1439,10 @@ def main():
 
     # Download data if requested or if files don't exist
     if not data_exists:
-        download_stix_data(args.data_path)
+        download_stix_data(args.data_dir)
 
     # Load STIX data from the specified path
-    loaded_domains = load_stix_data(args.data_path)
+    loaded_domains = load_stix_data(args.data_dir)
 
     if not loaded_domains:
         exit(1)

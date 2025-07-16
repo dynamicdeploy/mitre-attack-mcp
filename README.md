@@ -56,6 +56,7 @@ C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 ```
 
 #### Mac
+
 * TBA
 
 2. Add the following to that file if it doesn't already exist. If it already exists, merge the two JSON structures accordingly.
@@ -64,9 +65,8 @@ C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 {
   "mcpServers": {
     "mitre-attack": {
-      "command": "python",
+      "command": "mitre-attack-mcp",
       "args": [
-        "mitre-attack-mcp"
       ]
     }
   }
@@ -79,9 +79,8 @@ C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 {
   "mcpServers": {
     "mitre-attack": {
-      "command": "python",
+      "command": "mitre-attack-mcp",
       "args": [
-        "mitre-attack-mcp",
         "--data-dir",
         "<path-to-data-dir>"
       ]
