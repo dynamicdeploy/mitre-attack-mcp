@@ -30,9 +30,9 @@
 To clone and run this server, you'll need [Git](https://git-scm.com), [Python](https://www.python.org/), and [PipX](https://github.com/pypa/pipx) installed on your computer.
 
 1. Ensure Git, Python, and PipX have been installed using their official respective installation instructions for Windows/Mac/Linux
-
+2. Install the MCP Server using PipX
+   
 ```bash
-# Install the MCP Server using PipX
 pipx install git+https://github.com/stoyky/mitre-attack-mcp
 ```
 
