@@ -17,40 +17,32 @@
 ## Key Features
 
 * 50+ Tools for MITRE ATT&CK Querying
-  - Comprehensive access to the MITRE ATT&CK knowledge base through structured API tools
+  * Comprehensive access to the MITRE ATT&CK knowledge base through structured API tools
 * Automatic ATT&CK Navigator Layer Generation
-  - Generate visual representations of techniques used by threat actors
+  * Generate visual representations of techniques used by threat actors
 * Threat Actor and Malware Attribution
-  - Query relationships between malware, threat actors, and techniques
+  * Query relationships between malware, threat actors, and techniques
 * Technique Overlap Analysis
-  - Compare techniques used by different threat actors or malware families
+  * Compare techniques used by different threat actors or malware families
 
 ## Installation
 
-To clone and run this server, you'll need [Git](https://git-scm.com) and [Python](https://www.python.org/) installed on your computer. From your command line:
+To clone and run this server, you'll need [Git](https://git-scm.com), [Python](https://www.python.org/), and [PipX](https://github.com/pypa/pipx) installed on your computer.
+
+1. Ensure Git, Python, and PipX have been installed using their official respective installation instructions for Windows/Mac/Linux
 
 ```bash
-# Clone this repository
-$ git clone https://github.com/stoyky/mitre-attack-mcp
-
-# Go into the repository
-$ cd mitre-attack-mcp
-
-# Install dependencies
-$ pip install -r requirements.txt
-
-# OR install the most important dependencies manually
-
-$ pip install mcp
-$ pip install mitreattack-python
-
+# INstall the MCP Server using PipX
+pipx install git+https://github.com/stoyky/mitre-attack-mcp
 ```
 
 ## How To Use
 
 ### Configure with Claude AI Desktop
 
-Add the following to your Claude Desktop config file, typically found at:
+1. Open Claude's MCP server configuration file.
+
+#### Windows
 
 ```
 C:\Users\[YourUsername]\AppData\Roaming\Claude\claude_desktop_config.json
@@ -58,27 +50,50 @@ C:\Users\[YourUsername]\AppData\Roaming\Claude\claude_desktop_config.json
 C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 ```
 
+#### Linux
+
+```~/.config/Claude/claude_desktop_config.json
+```
+
+#### Mac
+
+* TBA
+
+2. Add the following to that file if it doesn't already exist. If it already exists, merge the two JSON structures accordingly.
+
 ```json
 {
   "mcpServers": {
     "mitre-attack": {
-      "command": "python",
+      "command": "mitre-attack-mcp",
       "args": [
-        "PATH/TO/mitre-attack-mcp-server.py",
-        "PATH/TO/mitre-attack-data"
       ]
     }
   }
 }
 ```
 
-> **Note**
-> The second argument is the path where MITRE ATT&CK data will be stored. The server automatically downloads the latest data files if needed.
+**Note**: By default the MCP server stores the mitre-related data in the current users default cache directory. You can specify a custom data directory to use with the following config:
+
+```json
+{
+  "mcpServers": {
+    "mitre-attack": {
+      "command": "mitre-attack-mcp",
+      "args": [
+        "--data-dir",
+        "<path-to-data-dir>"
+      ]
+    }
+  }
+}
+```
 
 ## Changelog
 
-- v1.0.0 - Initial release
-- V1.0.1 - Improved robustness of layer metadata generation and error handling in layer generation function
+* v1.0.2 - Now installable via PipX on Windows, Mac, and Linux. "data directory" argument is now optional and will use the default cache directory if omitted.
+* v1.0.0 - Initial release
+* V1.0.1 - Improved robustness of layer metadata generation and error handling in layer generation function
 
 ## Use Cases
 
@@ -88,14 +103,14 @@ C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 * Find campaign overlaps between different threat actors
 * Identify common techniques used by multiple malware families
 
-Please see my [blog](https://www.remyjaspers.com/blog/mitre_attack_mcp_server/) for more information and examples. 
+Please see my [blog](https://www.remyjaspers.com/blog/mitre_attack_mcp_server/) for more information and examples.
 
 ## Credits
 
-- [MITRE ATT&CK](https://attack.mitre.org/) - Knowledge base of adversary tactics and techniques
-- [MITRE ATT&CK Python](https://github.com/mitre-attack/mitreattack-python) - Python library to interact with the knowledge base
-- [ATT&CK Navigator](https://github.com/mitre-attack/attack-navigator) - Tool for visualizing ATT&CK matrices
-- [Anthropic](https://www.anthropic.com/) - Developers of the Model-Context Protocol
+* [MITRE ATT&CK](https://attack.mitre.org/) - Knowledge base of adversary tactics and techniques
+* [MITRE ATT&CK Python](https://github.com/mitre-attack/mitreattack-python) - Python library to interact with the knowledge base
+* [ATT&CK Navigator](https://github.com/mitre-attack/attack-navigator) - Tool for visualizing ATT&CK matrices
+* [Anthropic](https://www.anthropic.com/) - Developers of the Model-Context Protocol
 
 ---
 
