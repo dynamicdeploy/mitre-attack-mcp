@@ -52,7 +52,8 @@ C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 
 #### Linux
 
-```~/.config/Claude/claude_desktop_config.json
+```bash
+~/.config/Claude/claude_desktop_config.json
 ```
 
 #### Mac
