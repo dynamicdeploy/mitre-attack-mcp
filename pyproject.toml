@@ -49,7 +49,7 @@ dependencies = [
 "mccabe==0.7.0",
 "mcp==1.6.0",
 "mdurl==0.1.2",
-"mitreattack-python==4.0.0",
+"mitreattack-python==5.0.0",
 "mixbox==1.0.5",
 "mypy-extensions==1.0.0",
 "netaddr==1.3.0",
