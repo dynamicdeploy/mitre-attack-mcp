@@ -50,15 +50,11 @@ C:\Users\[YourUsername]\AppData\Roaming\Claude\claude_desktop_config.json
 C:\Users\[YourUsername]\AppData\Local\AnthropicClaude\claude_desktop_config.json
 ```
 
-#### Linux
+#### Linux / Mac
 
 ```bash
 ~/.config/Claude/claude_desktop_config.json
 ```
-
-#### Mac
-
-* TBA
 
 2. Add the following to that file if it doesn't already exist. If it already exists, merge the two JSON structures accordingly.
 
