@@ -1,0 +1,309 @@
+{
+  "name": "Akira vs Babuk Ransomware Techniques Comparison",
+  "versions": {
+    "attack": "16",
+    "navigator": "5.1.0",
+    "layer": "4.5"
+  },
+  "description": "Comparison of techniques used by Akira and Babuk ransomware families. Overlapping techniques are highlighted with score 3, while unique techniques have score 1.",
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "expandedSubtechniques": "none"
+  },
+  "techniques": [
+    {
+      "techniqueID": "T1083",
+      "techniqueName": "File and Directory Discovery",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Used for discovering files to encrypt"
+        },
+        {
+          "name": "Babuk", 
+          "value": "Used for discovering files to encrypt"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1082",
+      "techniqueName": "System Information Discovery",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Gathers system information for targeting"
+        },
+        {
+          "name": "Babuk",
+          "value": "Gathers system information for targeting"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1106",
+      "techniqueName": "Native API",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Uses native APIs for system operations"
+        },
+        {
+          "name": "Babuk",
+          "value": "Uses native APIs for system operations"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1486",
+      "techniqueName": "Data Encrypted for Impact",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Core technique for both ransomware families",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Primary ransomware encryption technique"
+        },
+        {
+          "name": "Babuk",
+          "value": "Primary ransomware encryption technique"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1490",
+      "techniqueName": "Inhibit System Recovery",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Prevents system recovery to ensure ransom payment"
+        },
+        {
+          "name": "Babuk",
+          "value": "Prevents system recovery to ensure ransom payment"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1057",
+      "techniqueName": "Process Discovery",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Discovers running processes for targeting"
+        },
+        {
+          "name": "Babuk",
+          "value": "Discovers running processes for targeting"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1059.003",
+      "techniqueName": "Windows Command Shell",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Uses command shell for system operations"
+        },
+        {
+          "name": "Babuk",
+          "value": "Uses command shell for system operations"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1135",
+      "techniqueName": "Network Share Discovery",
+      "score": 3,
+      "color": "#8ec843ff",
+      "comment": "Used by both Akira and Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Discovers network shares for lateral movement"
+        },
+        {
+          "name": "Babuk",
+          "value": "Discovers network shares for lateral movement"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1059.001",
+      "techniqueName": "PowerShell",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Akira ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Uses PowerShell for execution and discovery"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1047",
+      "techniqueName": "Windows Management Instrumentation",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Akira ransomware",
+      "metadata": [
+        {
+          "name": "Akira",
+          "value": "Uses WMI for system management and discovery"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1049",
+      "techniqueName": "System Network Connections Discovery",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Discovers network connections for reconnaissance"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1140",
+      "techniqueName": "Deobfuscate/Decode Files or Information",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Deobfuscates files and information"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1027.002",
+      "techniqueName": "Software Packing",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Uses software packing to conceal malware"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1489",
+      "techniqueName": "Service Stop",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Stops services to prevent interference"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1562.001",
+      "techniqueName": "Disable or Modify Tools",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Disables security tools to avoid detection"
+        }
+      ]
+    },
+    {
+      "techniqueID": "T1007",
+      "techniqueName": "System Service Discovery",
+      "score": 1,
+      "color": "#ff6666ff",
+      "comment": "Unique to Babuk ransomware",
+      "metadata": [
+        {
+          "name": "Babuk",
+          "value": "Discovers system services for targeting"
+        }
+      ]
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666ff", "#ffe766ff", "#8ec843ff"],
+    "minValue": 0,
+    "maxValue": 3
+  },
+  "legendItems": [
+    {
+      "label": "Akira Only",
+      "color": "#ff6666ff"
+    },
+    {
+      "label": "Babuk Only", 
+      "color": "#ff6666ff"
+    },
+    {
+      "label": "Both Akira & Babuk",
+      "color": "#8ec843ff"
+    }
+  ],
+  "metadata": [
+    {
+      "name": "Akira Ransomware",
+      "value": "C++ ransomware associated with Akira group, targets critical infrastructure"
+    },
+    {
+      "name": "Babuk Ransomware", 
+      "value": "RaaS malware using Big Game Hunting approach, operates leak site"
+    },
+    {
+      "name": "Overlapping Techniques",
+      "value": "8 techniques used by both ransomware families"
+    },
+    {
+      "name": "Unique Techniques",
+      "value": "8 techniques unique to each family"
+    }
+  ],
+  "links": [
+    {
+      "label": "Akira Ransomware - MITRE ATT&CK",
+      "url": "https://attack.mitre.org/software/S1129"
+    },
+    {
+      "label": "Babuk Ransomware - MITRE ATT&CK", 
+      "url": "https://attack.mitre.org/software/S0638"
+    }
+  ],
+  "tacticRowBackground": "#dddddd",
+  "domain": "enterprise-attack",
+  "filters": {
+    "platforms": ["Windows", "Linux", "macOS", "Network", "PRE", "Containers", "IaaS", "SaaS", "Office Suite", "Identity Provider"]
+  }
+}

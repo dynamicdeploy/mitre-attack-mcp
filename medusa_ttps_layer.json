@@ -1,0 +1,337 @@
+{
+  "name": "Medusa Ransomware TTPs Analysis",
+  "versions": {
+    "attack": "16",
+    "navigator": "5.1.0",
+    "layer": "4.5"
+  },
+  "description": "MITRE ATT&CK techniques used by Medusa ransomware actors based on FBI/CISA/MS-ISAC advisory AA25-071A. Each technique has score 12345 and unique colors per tactic.",
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "expandedSubtechniques": "none"
+  },
+  "techniques": [
+    {
+      "techniqueID": "T1190",
+      "techniqueName": "Exploit Public-Facing Application",
+      "tactic": "initial-access",
+      "score": 12345,
+      "color": "#ff6b6b",
+      "comment": "Medusa actors exploited unpatched software or n-day vulnerabilities through common vulnerabilities and exposures"
+    },
+    {
+      "techniqueID": "T1566",
+      "techniqueName": "Phishing",
+      "tactic": "initial-access",
+      "score": 12345,
+      "color": "#ff6b6b",
+      "comment": "Medusa IABS used phishing campaigns as a primary method for delivering ransomware to victims"
+    },
+    {
+      "techniqueID": "T1070.003",
+      "techniqueName": "Indicator Removal: Clear Command History",
+      "tactic": "defense-evasion",
+      "score": 12345,
+      "color": "#4ecdc4",
+      "comment": "Medusa actors attempt to cover their tracks by deleting the PowerShell command line history"
+    },
+    {
+      "techniqueID": "T1027.013",
+      "techniqueName": "Obfuscated Files or Information: Encrypted/Encoded File",
+      "tactic": "defense-evasion",
+      "score": 12345,
+      "color": "#4ecdc4",
+      "comment": "Medusa actors use a well-known evasion technique that executes a base64 encrypted command"
+    },
+    {
+      "techniqueID": "T1027",
+      "techniqueName": "Obfuscated Files or Information",
+      "tactic": "defense-evasion",
+      "score": 12345,
+      "color": "#4ecdc4",
+      "comment": "Medusa actors obfuscated a string by slicing it into pieces and referencing it via a variable"
+    },
+    {
+      "techniqueID": "T1070",
+      "techniqueName": "Indicator Removal",
+      "tactic": "defense-evasion",
+      "score": 12345,
+      "color": "#4ecdc4",
+      "comment": "Medusa actors deleted their previous work and tools installed"
+    },
+    {
+      "techniqueID": "T1562.001",
+      "techniqueName": "Impair Defenses: Disable or Modify Tools",
+      "tactic": "defense-evasion",
+      "score": 12345,
+      "color": "#4ecdc4",
+      "comment": "Medusa actors killed or deleted endpoint detection and response tools"
+    },
+    {
+      "techniqueID": "T1049",
+      "techniqueName": "Network Service Discovery",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors utilized living of the land techniques to perform network enumeration"
+    },
+    {
+      "techniqueID": "T1083",
+      "techniqueName": "File and Directory Discovery",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors utilized Windows Command Prompt for filesystem enumeration"
+    },
+    {
+      "techniqueID": "T1135",
+      "techniqueName": "Network Share Discovery",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors queried shared drives on the local system to gather sources of information"
+    },
+    {
+      "techniqueID": "T1016",
+      "techniqueName": "System Network Configuration Discovery",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors used operating system administrative utilities to gather network information"
+    },
+    {
+      "techniqueID": "T1082",
+      "techniqueName": "System Information Discovery",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors used the command systeminfo to gather detailed system information"
+    },
+    {
+      "techniqueID": "T1069.002",
+      "techniqueName": "Permission Groups Discovery: Domain Groups",
+      "tactic": "discovery",
+      "score": 12345,
+      "color": "#45b7d1",
+      "comment": "Medusa actors attempt to find domain-level group and permission settings"
+    },
+    {
+      "techniqueID": "T1555",
+      "techniqueName": "Credential Access",
+      "tactic": "credential-access",
+      "score": 12345,
+      "color": "#96ceb4",
+      "comment": "Medusa actors harvest credentials with tools like Mimikatz to gain access to systems"
+    },
+    {
+      "techniqueID": "T1003.001",
+      "techniqueName": "OS Credential Dumping: LSASS Memory",
+      "tactic": "credential-access",
+      "score": 12345,
+      "color": "#96ceb4",
+      "comment": "Medusa actors were observed accessing credential material stored in process memory or LSASS using Mimikatz"
+    },
+    {
+      "techniqueID": "T1059.001",
+      "techniqueName": "Command and Scripting Interpreter: PowerShell",
+      "tactic": "execution",
+      "score": 12345,
+      "color": "#feca57",
+      "comment": "Medusa actors used PowerShell for ingress, network, and filesystem enumeration"
+    },
+    {
+      "techniqueID": "T1059.003",
+      "techniqueName": "Command and Scripting Interpreter: Windows Command Shell",
+      "tactic": "execution",
+      "score": 12345,
+      "color": "#feca57",
+      "comment": "Medusa actors used Windows Command Prompt for ingress, network, and filesystem enumeration"
+    },
+    {
+      "techniqueID": "T1021.001",
+      "techniqueName": "Remote Services: Remote Desktop Protocol",
+      "tactic": "lateral-movement",
+      "score": 12345,
+      "color": "#ff9ff3",
+      "comment": "Medusa actors used RDP to log into an interactive session with a system and move laterally"
+    },
+    {
+      "techniqueID": "T1047",
+      "techniqueName": "Windows Management Instrumentation",
+      "tactic": "execution",
+      "score": 12345,
+      "color": "#feca57",
+      "comment": "Medusa actors abused WMI to query system information"
+    },
+    {
+      "techniqueID": "T1569.002",
+      "techniqueName": "System Services",
+      "tactic": "execution",
+      "score": 12345,
+      "color": "#feca57",
+      "comment": "Medusa actors used Sysinternals PsExec to deploy the encryptor on files across the network"
+    },
+    {
+      "techniqueID": "T1567.002",
+      "techniqueName": "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+      "tactic": "exfiltration",
+      "score": 12345,
+      "color": "#a8e6cf",
+      "comment": "Medusa actors used Rclone to facilitate exfiltration of data to the Medusa C2 servers"
+    },
+    {
+      "techniqueID": "T1105",
+      "techniqueName": "Ingress Tool Transfer",
+      "tactic": "command-and-control",
+      "score": 12345,
+      "color": "#ffd93d",
+      "comment": "Medusa actors used PowerShell, Windows Command Prompt, and certutil for file ingress"
+    },
+    {
+      "techniqueID": "T1071.001",
+      "techniqueName": "Application Layer Protocol: Web Protocols",
+      "tactic": "command-and-control",
+      "score": 12345,
+      "color": "#ffd93d",
+      "comment": "Medusa actors communicate using application layer protocols associated with web traffic over port 443 HTTPS"
+    },
+    {
+      "techniqueID": "T1219",
+      "techniqueName": "Remote Access Software",
+      "tactic": "command-and-control",
+      "score": 12345,
+      "color": "#ffd93d",
+      "comment": "Medusa actors used remote access software to move laterally through the network"
+    },
+    {
+      "techniqueID": "T1136.002",
+      "techniqueName": "Create Account",
+      "tactic": "persistence",
+      "score": 12345,
+      "color": "#b4a7d6",
+      "comment": "Medusa actors created a domain account to maintain access to victim systems"
+    },
+    {
+      "techniqueID": "T1486",
+      "techniqueName": "Data Encrypted for Impact",
+      "tactic": "impact",
+      "score": 12345,
+      "color": "#ff7675",
+      "comment": "Medusa identified and encrypted data on target systems to interrupt availability to system and network resources"
+    },
+    {
+      "techniqueID": "T1490",
+      "techniqueName": "Inhibit System Recovery",
+      "tactic": "impact",
+      "score": 12345,
+      "color": "#ff7675",
+      "comment": "The process gaze.exe terminates all services then deletes shadow copies and encrypts files with AES-256 before dropping the ransom note"
+    },
+    {
+      "techniqueID": "T1657",
+      "techniqueName": "Financial Theft",
+      "tactic": "impact",
+      "score": 12345,
+      "color": "#ff7675",
+      "comment": "Victims must pay to decrypt files and prevent further release by Medusa actors"
+    },
+    {
+      "techniqueID": "T1529",
+      "techniqueName": "System Shutdown/Reboot",
+      "tactic": "impact",
+      "score": 12345,
+      "color": "#ff7675",
+      "comment": "Medusa actors manually turned off and encrypted virtual machines"
+    },
+    {
+      "techniqueID": "T1489",
+      "techniqueName": "Service Stop",
+      "tactic": "impact",
+      "score": 12345,
+      "color": "#ff7675",
+      "comment": "The process gaze.exe terminates all services related to backups, security, databases, communication, file sharing, and websites"
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57", "#ff9ff3", "#a8e6cf", "#ffd93d", "#b4a7d6", "#ff7675"],
+    "minValue": 0,
+    "maxValue": 12345
+  },
+  "legendItems": [
+    {
+      "label": "Initial Access",
+      "color": "#ff6b6b"
+    },
+    {
+      "label": "Defense Evasion",
+      "color": "#4ecdc4"
+    },
+    {
+      "label": "Discovery",
+      "color": "#45b7d1"
+    },
+    {
+      "label": "Credential Access",
+      "color": "#96ceb4"
+    },
+    {
+      "label": "Execution",
+      "color": "#feca57"
+    },
+    {
+      "label": "Lateral Movement",
+      "color": "#ff9ff3"
+    },
+    {
+      "label": "Exfiltration",
+      "color": "#a8e6cf"
+    },
+    {
+      "label": "Command and Control",
+      "color": "#ffd93d"
+    },
+    {
+      "label": "Persistence",
+      "color": "#b4a7d6"
+    },
+    {
+      "label": "Impact",
+      "color": "#ff7675"
+    }
+  ],
+  "metadata": [
+    {
+      "name": "Source",
+      "value": "FBI/CISA/MS-ISAC Advisory AA25-071A - Medusa Ransomware"
+    },
+    {
+      "name": "Total Techniques",
+      "value": "30 techniques across 10 tactics"
+    },
+    {
+      "name": "Score",
+      "value": "12345 for all techniques"
+    },
+    {
+      "name": "Color Scheme",
+      "value": "Unique color per MITRE ATT&CK tactic"
+    }
+  ],
+  "links": [
+    {
+      "label": "FBI/CISA/MS-ISAC Advisory AA25-071A",
+      "url": "https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-071a"
+    },
+    {
+      "label": "MITRE ATT&CK Framework",
+      "url": "https://attack.mitre.org/"
+    }
+  ],
+  "tacticRowBackground": "#dddddd",
+  "domain": "enterprise-attack",
+  "filters": {
+    "platforms": ["Windows", "Linux", "macOS", "Network", "PRE", "Containers", "IaaS", "SaaS", "Office Suite", "Identity Provider"]
+  }
+}
