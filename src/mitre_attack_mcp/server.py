@@ -1,6 +1,9 @@
 from typing import Any, Dict, List
 import os, json, argparse, re, sys
 import traceback
+import signal
+import threading
+import time
 
 from mitreattack.stix20 import MitreAttackData
 from mitreattack.navlayers.manipulators.layerops import LayerOps
@@ -24,6 +27,9 @@ mcp = FastMCP("mitre-attack")
 
 # Dictionary to store MitreAttackData objects for each domain
 attack_data_sources: Dict[str, MitreAttackData] = {}
+
+# Global flag for graceful shutdown
+shutdown_requested = False
 
 
 def download_stix_data(data_path):
@@ -1636,21 +1642,48 @@ def rainbow_layer() -> str:
 This is for visual demonstration and fun - create the most colorful ATT&CK layer possible!"""
 
 
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully"""
+    global shutdown_requested
+    logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+    print(f"\n🛑 Server shutdown requested (signal {signum})")
+    print("👋 Goodbye!")
+    shutdown_requested = True
+    sys.exit(0)
+
+
 def run_as_http(host, port):
     """Run the MCP server as an HTTP server using uvicorn"""
     import uvicorn
     
     logger.info(f"Starting HTTP server on {host}:{port}")
     
-    # Create ASGI application
-    app = mcp.http_app()
+    # Set up signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
-    # Run the ASGI application with uvicorn
-    uvicorn.run(app, host=host, port=port)
+    try:
+        # Create ASGI application
+        app = mcp.http_app()
+        
+        # Run the ASGI application with uvicorn
+        uvicorn.run(app, host=host, port=port, log_level="info")
+    except KeyboardInterrupt:
+        logger.info("HTTP server interrupted by user")
+        print("\n🛑 HTTP server shutdown requested by user (Ctrl+C)")
+        print("👋 Goodbye!")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"HTTP server error: {str(e)}")
+        raise
 
 
 def main():
     logger.info("Starting MITRE ATT&CK MCP Server")
+    
+    # Set up signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     try:
         parser = argparse.ArgumentParser()
@@ -1723,8 +1756,19 @@ def main():
             run_as_http(args.host, args.port)
         else:
             logger.info("Starting MCP server with stdio transport")
-            mcp.run(transport="stdio")
+            try:
+                mcp.run(transport="stdio")
+            except KeyboardInterrupt:
+                logger.info("STDIO server interrupted by user")
+                print("\n🛑 STDIO server shutdown requested by user (Ctrl+C)")
+                print("👋 Goodbye!")
+                sys.exit(0)
 
+    except KeyboardInterrupt:
+        logger.info("Received keyboard interrupt (Ctrl+C), shutting down gracefully...")
+        print("\n🛑 Server shutdown requested by user (Ctrl+C)")
+        print("👋 Goodbye!")
+        sys.exit(0)
     except Exception as e:
         logger.error(f"Critical error in main: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
