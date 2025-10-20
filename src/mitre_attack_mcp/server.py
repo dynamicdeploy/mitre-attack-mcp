@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 import os, json, argparse, re, sys
+import traceback
 
 from mitreattack.stix20 import MitreAttackData
 from mitreattack.navlayers.manipulators.layerops import LayerOps
@@ -8,8 +9,12 @@ from mitreattack.navlayers import UsageLayerGenerator
 from mitreattack.navlayers import ToSvg, SVGConfig
 from mitreattack.navlayers import ToExcel
 from mitreattack import download_stix, release_info
+from fastmcp import FastMCP
+# from mcp.server.fastmcp import FastMCP
+from hd_logging import setup_logger
 
-from mcp.server.fastmcp import FastMCP
+# Setup logging
+logger = setup_logger(__name__, log_file_path="logs/server.log")
 
 
 DEFAULT_DATA_DIR_NAME = "mitre-attack-data"
@@ -34,34 +39,54 @@ def download_stix_data(data_path):
     Returns:
         List[str]: A list of tuples containing (domain, file_path) for each downloaded STIX file
     """
+    logger.info(f"Starting STIX data download to: {data_path}")
     domains = ["enterprise", "mobile", "ics"]
     stix_file_paths = []
 
-    # Create the data directory if it doesn't exist
-    if not os.path.exists(data_path):
-        os.makedirs(data_path)
+    try:
+        # Create the data directory if it doesn't exist
+        if not os.path.exists(data_path):
+            logger.info(f"Creating data directory: {data_path}")
+            os.makedirs(data_path)
+        else:
+            logger.debug(f"Data directory already exists: {data_path}")
 
-    # Download STIX data for each domain
-    for domain in domains:
-        # Get release information
-        releases = release_info.STIX21[domain]
-        known_hash = releases[release_info.LATEST_VERSION]
+        # Download STIX data for each domain
+        for domain in domains:
+            logger.info(f"Downloading STIX data for domain: {domain}")
+            try:
+                # Get release information
+                releases = release_info.STIX21[domain]
+                known_hash = releases[release_info.LATEST_VERSION]
+                logger.debug(f"Using release {release_info.LATEST_VERSION} for {domain} with hash: {known_hash}")
 
-        # Download STIX data directly to the target path
-        download_stix.download_stix(
-            stix_version="2.1",
-            domain=domain,
-            download_dir=data_path,
-            release=release_info.LATEST_VERSION,
-            known_hash=known_hash,
-        )
+                # Download STIX data directly to the target path
+                download_stix.download_stix(
+                    stix_version="2.1",
+                    domain=domain,
+                    download_dir=data_path,
+                    release=release_info.LATEST_VERSION,
+                    known_hash=known_hash,
+                )
 
-        # Save path to the downloaded file
-        domain_key = f"{domain}-attack"
-        stix_path = os.path.join(data_path, f"{domain_key}.json")
-        stix_file_paths.append((domain, stix_path))
+                # Save path to the downloaded file
+                domain_key = f"{domain}-attack"
+                stix_path = os.path.join(data_path, f"{domain_key}.json")
+                stix_file_paths.append((domain, stix_path))
+                logger.info(f"Successfully downloaded {domain} data to: {stix_path}")
 
-    return stix_file_paths
+            except Exception as e:
+                logger.error(f"Failed to download STIX data for domain {domain}: {str(e)}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
+
+        logger.info(f"Successfully downloaded STIX data for all domains. Files: {stix_file_paths}")
+        return stix_file_paths
+
+    except Exception as e:
+        logger.error(f"Critical error in download_stix_data: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 def load_stix_data(data_path):
@@ -70,21 +95,38 @@ def load_stix_data(data_path):
     Args:
         data_path: Path to the directory containing the STIX JSON files
     """
+    logger.info(f"Loading STIX data from: {data_path}")
     domains = ["enterprise", "mobile", "ics"]
     loaded_domains = []
 
-    for domain in domains:
-        domain_key = f"{domain}-attack"
-        stix_path = os.path.join(
-            data_path, "v" + release_info.LATEST_VERSION, f"{domain_key}.json"
-        )
+    try:
+        for domain in domains:
+            domain_key = f"{domain}-attack"
+            stix_path = os.path.join(
+                data_path, "v" + release_info.LATEST_VERSION, f"{domain_key}.json"
+            )
+            logger.debug(f"Looking for {domain} data at: {stix_path}")
 
-        # Check if the file exists before loading
-        if os.path.exists(stix_path):
-            attack_data_sources[domain_key] = MitreAttackData(stix_path)
-            loaded_domains.append(domain)
+            # Check if the file exists before loading
+            if os.path.exists(stix_path):
+                logger.info(f"Loading {domain} data from: {stix_path}")
+                try:
+                    attack_data_sources[domain_key] = MitreAttackData(stix_path)
+                    loaded_domains.append(domain)
+                    logger.info(f"Successfully loaded {domain} data")
+                except Exception as e:
+                    logger.error(f"Failed to load {domain} data from {stix_path}: {str(e)}")
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+            else:
+                logger.warning(f"STIX data file not found for {domain}: {stix_path}")
 
-    return loaded_domains
+        logger.info(f"Successfully loaded STIX data for domains: {loaded_domains}")
+        return loaded_domains
+
+    except Exception as e:
+        logger.error(f"Critical error in load_stix_data: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 # Function to get the appropriate MitreAttackData object for a domain
@@ -97,15 +139,24 @@ def get_attack_data(domain: str = "enterprise") -> MitreAttackData:
     Returns:
         MitreAttackData object for the specified domain
     """
+    logger.debug(f"Getting attack data for domain: {domain}")
     domain_key = f"{domain}-attack"
 
-    # Check if domain data is loaded
-    if domain_key not in attack_data_sources:
-        raise ValueError(
-            f"Domain '{domain}' not loaded. Available domains: {', '.join([d.replace('-attack', '') for d in attack_data_sources.keys()])}"
-        )
+    try:
+        # Check if domain data is loaded
+        if domain_key not in attack_data_sources:
+            available_domains = [d.replace('-attack', '') for d in attack_data_sources.keys()]
+            error_msg = f"Domain '{domain}' not loaded. Available domains: {', '.join(available_domains)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
-    return attack_data_sources[domain_key]
+        logger.debug(f"Successfully retrieved attack data for domain: {domain}")
+        return attack_data_sources[domain_key]
+
+    except Exception as e:
+        logger.error(f"Error getting attack data for domain {domain}: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 #####################################################################
@@ -191,11 +242,19 @@ async def get_object_by_attack_id(
         domain: Domain name ('enterprise', 'mobile', or 'ics')
         include_description: Whether to include description in the output (default is False)
     """
-    attack_data = get_attack_data(domain)
-    object = attack_data.get_object_by_attack_id(attack_id, stix_type)
-    return format_objects(
-        [object], include_description=include_description, domain=domain
-    )
+    logger.info(f"Getting object by ATT&CK ID: {attack_id}, type: {stix_type}, domain: {domain}")
+    
+    try:
+        attack_data = get_attack_data(domain)
+        object = attack_data.get_object_by_attack_id(attack_id, stix_type)
+        logger.debug(f"Successfully retrieved object for {attack_id}")
+        return format_objects(
+            [object], include_description=include_description, domain=domain
+        )
+    except Exception as e:
+        logger.error(f"Error getting object by ATT&CK ID {attack_id}: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 
 @mcp.tool()
@@ -1240,13 +1299,14 @@ async def get_revoked_techniques(
 
 
 @mcp.tool()
-async def generate_layer(attack_id: str, score: int, domain: str = "enterprise") -> str:
+async def generate_layer(attack_id: str, score: int, domain: str = "enterprise", data_path: str = None) -> str:
     """Generate an ATT&CK navigator layer in JSON format based on a matching ATT&CK ID value
 
     Args:
         attack_id: ATT&CK ID to generate ATT&CK navigator layer for. Valid match values are single ATT&CK ID's for group (GXXX), mitigation (MXXX), software (SXXX), and data component objects (DXXX) within the selected ATT&CK data. NEVER directly input a technique (TXXX). If an invalid match happens, or if multiple ATT&CK ID's are provided, present the user with an error message.
         score: Score to assign to each technique in the layer
         domain: Domain name ('enterprise', 'mobile', or 'ics')
+        data_path: Path to the data directory. If None, uses the default cache directory.
     """
     try:
         # Validate input parameters
@@ -1270,8 +1330,9 @@ async def generate_layer(attack_id: str, score: int, domain: str = "enterprise")
                 "match must be a valid ATT&CK ID format (GXXX, MXXX, SXXX, or DXXX)"
             )
 
-        # Use the data path from arguments
-        data_path = args.data_path
+        # Use the provided data path or default
+        if data_path is None:
+            data_path = get_default_data_dir()
 
         # Domain key is used in the filename format
         domain_key = f"{domain}-attack"
@@ -1386,65 +1447,289 @@ async def get_layer_metadata(domain="enterprise") -> str:
 def get_cache_dir():
     # `get_cache_dir` identifies the default cache directory for the current user on Windows/Mac/Linux
     # and returns the absolute path to it.
-    if sys.platform == "win32":
-        # Windows: %LOCALAPPDATA%
-        return os.path.join(
-            os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "Cache"
-        )
-    elif sys.platform == "darwin":
-        # macOS: ~/Library/Caches
-        return os.path.expanduser("~/Library/Caches")
-    else:
-        # Linux/Unix: ~/.cache (XDG Base Directory Specification)
-        return os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    return get_default_data_dir()
 
 
 def get_default_data_dir():
-    # `get_default_data_dir()` uses the operating sysems default cache directory to create a
-    # directory inside of that cache directory to store the mitre-related data.
-    # This functionality is used for circumstances where a data directory hasn't been
-    # explictely specified using the command line option `--data-dir`.
+    # `get_default_data_dir()` uses a relative directory next to the server to store
+    # the mitre-related data. This functionality is used for circumstances where a 
+    # data directory hasn't been explictely specified using the command line option `--data-dir`.
     # If the data directory doesn't exist, it will be created by this function.
 
-    cache_dir = get_cache_dir()
-
-    data_dir = os.path.join(cache_dir, DEFAULT_DATA_DIR_NAME)
+    # Use a relative directory next to the server
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(current_dir, DEFAULT_DATA_DIR_NAME)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     return data_dir
 
 
+#####################################################################
+# Prompt Functions for MITRE ATT&CK Analysis
+#####################################################################
+
+
+@mcp.prompt()
+def analyze_malware(malware_name: str) -> str:
+    """Generate a prompt to analyze malware and find its associated techniques, groups, and campaigns.
+    
+    Args:
+        malware_name: Name or alias of the malware to analyze
+    """
+    return f"""Analyze the malware '{malware_name}' and provide:
+1. What techniques does this malware use?
+2. Which threat actor groups are associated with this malware?
+3. What campaigns have used this malware?
+4. What platforms does this malware target?
+5. What mitigations can be applied against this malware?
+
+Use the available MITRE ATT&CK tools to gather comprehensive information about this malware."""
+
+
+@mcp.prompt()
+def compare_ransomware(ransomware1: str, ransomware2: str) -> str:
+    """Generate a prompt to compare two ransomware families and find overlapping techniques.
+    
+    Args:
+        ransomware1: Name of the first ransomware family
+        ransomware2: Name of the second ransomware family
+    """
+    return f"""Compare the ransomware families '{ransomware1}' and '{ransomware2}':
+
+1. Find all techniques used by each ransomware family
+2. Identify techniques that overlap between both families
+3. Highlight unique techniques for each family
+4. Generate an ATT&CK Navigator layer showing:
+   - Techniques used by {ransomware1} (score: 1)
+   - Techniques used by {ransomware2} (score: 3) 
+   - Overlapping techniques (score: 5)
+5. Provide a downloadable JSON file for the Navigator layer
+
+Use the available tools to gather data and generate the comparison layer."""
+
+
+@mcp.prompt()
+def extract_ttps_from_text(text_content: str) -> str:
+    """Generate a prompt to extract TTPs from unstructured text and create an ATT&CK Navigator layer.
+    
+    Args:
+        text_content: Unstructured text containing TTP descriptions
+    """
+    return f"""Extract MITRE ATT&CK techniques, tactics, and procedures (TTPs) from the following text and generate an ATT&CK Navigator layer:
+
+Text to analyze:
+{text_content}
+
+Please:
+1. Identify all TTPs mentioned in the text
+2. Map them to specific MITRE ATT&CK techniques
+3. Generate an ATT&CK Navigator layer with:
+   - Each identified technique with score 12345
+   - Unique colors per tactic
+   - Comments explaining how each technique is used
+4. Provide a downloadable JSON file for the Navigator layer
+
+Use the available MITRE ATT&CK tools to verify and map the techniques correctly."""
+
+
+@mcp.prompt()
+def threat_actor_analysis(group_name: str) -> str:
+    """Generate a prompt to perform comprehensive threat actor group analysis.
+    
+    Args:
+        group_name: Name or alias of the threat actor group
+    """
+    return f"""Perform a comprehensive analysis of the threat actor group '{group_name}':
+
+1. **Group Information**: Find the group's aliases, description, and attribution
+2. **Techniques Used**: List all techniques employed by this group
+3. **Software Used**: Identify all software and tools used by this group
+4. **Campaigns**: Find campaigns attributed to this group
+5. **Targeting**: What platforms and sectors does this group target?
+6. **Timeline**: When was this group first observed?
+7. **Mitigations**: What defensive measures can be taken against this group's techniques?
+
+Use the available MITRE ATT&CK tools to gather comprehensive intelligence about this threat actor group."""
+
+
+@mcp.prompt()
+def technique_analysis(technique_id: str) -> str:
+    """Generate a prompt to analyze a specific ATT&CK technique in detail.
+    
+    Args:
+        technique_id: ATT&CK technique ID (e.g., T1055, T1059.001)
+    """
+    return f"""Analyze the MITRE ATT&CK technique '{technique_id}' in detail:
+
+1. **Technique Details**: Get the full description, platforms, and permissions required
+2. **Sub-techniques**: If it's a parent technique, list all sub-techniques
+3. **Parent Technique**: If it's a sub-technique, identify the parent technique
+4. **Tactics**: What tactics does this technique belong to?
+5. **Groups Using**: Which threat actor groups use this technique?
+6. **Software Using**: What malware and tools use this technique?
+7. **Campaigns**: Which campaigns have employed this technique?
+8. **Mitigations**: What defensive measures can detect or prevent this technique?
+9. **Data Sources**: What data sources can detect this technique?
+10. **Procedure Examples**: How do real threat actors use this technique?
+
+Use the available MITRE ATT&CK tools to provide comprehensive analysis of this technique."""
+
+
+@mcp.prompt()
+def campaign_investigation(campaign_name: str) -> str:
+    """Generate a prompt to investigate a specific campaign and its TTPs.
+    
+    Args:
+        campaign_name: Name or alias of the campaign to investigate
+    """
+    return f"""Investigate the campaign '{campaign_name}' and analyze its attack patterns:
+
+1. **Campaign Details**: Get the campaign description, aliases, and attribution
+2. **Attributed Groups**: Which threat actor groups are linked to this campaign?
+3. **Techniques Used**: What techniques were employed in this campaign?
+4. **Software Used**: What malware and tools were used?
+5. **Targeting**: What sectors and platforms were targeted?
+6. **Timeline**: When did this campaign occur?
+7. **Generate Navigator Layer**: Create an ATT&CK Navigator layer showing:
+   - All techniques used in this campaign
+   - Score each technique based on frequency of use
+   - Add comments with real-world usage examples
+8. **Defensive Recommendations**: What mitigations should organizations implement?
+
+Use the available MITRE ATT&CK tools to gather intelligence and generate the Navigator layer."""
+
+
+@mcp.prompt()
+def sector_analysis(sector: str) -> str:
+    """Generate a prompt to analyze threats targeting a specific sector.
+    
+    Args:
+        sector: Industry sector to analyze (e.g., healthcare, finance, energy)
+    """
+    return f"""Analyze threats targeting the '{sector}' sector:
+
+1. **Threat Landscape**: What are the main threats to this sector?
+2. **Common Techniques**: What techniques are frequently used against this sector?
+3. **Threat Actors**: Which groups target this sector?
+4. **Campaigns**: What recent campaigns have targeted this sector?
+5. **Sector-Specific TTPs**: Are there techniques specific to this sector?
+6. **Defensive Strategy**: Generate an ATT&CK Navigator layer with:
+   - Techniques commonly used against this sector
+   - Prioritized by likelihood and impact
+   - Color-coded by threat level
+7. **Mitigation Recommendations**: What defensive measures should this sector implement?
+
+Use the available MITRE ATT&CK tools to provide sector-specific threat intelligence."""
+
+
+@mcp.prompt()
+def rainbow_layer() -> str:
+    """Generate a prompt to create a colorful rainbow ATT&CK Navigator layer."""
+    return """Create a rainbow-colored ATT&CK Navigator layer with all techniques:
+
+1. **Rainbow Colors**: Assign each technique a unique color from the rainbow spectrum
+2. **All Techniques**: Include all available techniques from the Enterprise domain
+3. **Color Pattern**: Use a systematic color distribution across the rainbow
+4. **Visual Appeal**: Make it visually striking and colorful
+5. **Downloadable**: Provide a downloadable JSON file for the Navigator
+
+This is for visual demonstration and fun - create the most colorful ATT&CK layer possible!"""
+
+
+def run_as_http(host, port):
+    """Run the MCP server as an HTTP server using uvicorn"""
+    import uvicorn
+    
+    logger.info(f"Starting HTTP server on {host}:{port}")
+    
+    # Create ASGI application
+    app = mcp.http_app()
+    
+    # Run the ASGI application with uvicorn
+    uvicorn.run(app, host=host, port=port)
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--data-dir",
-        "-d",
-        default=get_default_data_dir(),
-        help="Location to store Mitre-related data. Defaults to current users default cache directory.",
-    )
-
-    args = parser.parse_args()
-
-    # Check if data files exist in the specified path
-    data_exists = all(
-        os.path.exists(
-            os.path.join(
-                args.data_dir,
-                "v" + release_info.LATEST_VERSION,
-                f"{domain}-attack.json",
-            )
+    logger.info("Starting MITRE ATT&CK MCP Server")
+    
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "--data-dir",
+            "-d",
+            default=get_default_data_dir(),
+            help="Location to store Mitre-related data. Defaults to current users default cache directory.",
         )
-        for domain in ["enterprise", "mobile", "ics"]
-    )
+        parser.add_argument(
+            "--transport",
+            "-t",
+            choices=["stdio", "http"],
+            default="stdio",
+            help="Transport protocol to use. Defaults to stdio.",
+        )
+        parser.add_argument(
+            "--host",
+            default="0.0.0.0",
+            help="Host to bind the server to. Defaults to 0.0.0.0.",
+        )
+        parser.add_argument(
+            "--port",
+            "-p",
+            type=int,
+            default=8032,
+            help="Port to bind the server to. Defaults to 8032.",
+        )
 
-    # Download data if requested or if files don't exist
-    if not data_exists:
-        download_stix_data(args.data_dir)
+        args = parser.parse_args()
+        logger.info(f"Using data directory: {args.data_dir}")
+        logger.info(f"Transport: {args.transport}")
+        if args.transport == "http":
+            logger.info(f"Host: {args.host}, Port: {args.port}")
 
-    # Load STIX data from the specified path
-    loaded_domains = load_stix_data(args.data_dir)
+        # Check if data files exist in the specified path
+        data_exists = all(
+            os.path.exists(
+                os.path.join(
+                    args.data_dir,
+                    "v" + release_info.LATEST_VERSION,
+                    f"{domain}-attack.json",
+                )
+            )
+            for domain in ["enterprise", "mobile", "ics"]
+        )
 
-    if not loaded_domains:
-        exit(1)
+        logger.debug(f"Data exists check result: {data_exists}")
 
-    mcp.run(transport="stdio")
+        # Download data if requested or if files don't exist
+        if not data_exists:
+            logger.info("Data not found, downloading STIX data")
+            download_stix_data(args.data_dir)
+        else:
+            logger.info("Data already exists, skipping download")
+
+        # Load STIX data from the specified path
+        logger.info("Loading STIX data")
+        loaded_domains = load_stix_data(args.data_dir)
+
+        if not loaded_domains:
+            logger.error("No domains could be loaded, exiting")
+            exit(1)
+
+        logger.info(f"Successfully loaded domains: {loaded_domains}")
+        
+        # Run server with specified transport
+        if args.transport == "http":
+            logger.info("Starting MCP server with HTTP transport")
+            run_as_http(args.host, args.port)
+        else:
+            logger.info("Starting MCP server with stdio transport")
+            mcp.run(transport="stdio")
+
+    except Exception as e:
+        logger.error(f"Critical error in main: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
+
+
+if __name__ == "__main__":
+    main()

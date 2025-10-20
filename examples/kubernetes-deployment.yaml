@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mitre-attack-mcp
+  labels:
+    app: mitre-attack-mcp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mitre-attack-mcp
+  template:
+    metadata:
+      labels:
+        app: mitre-attack-mcp
+    spec:
+      containers:
+      - name: mitre-attack-mcp
+        image: mitre-attack-mcp:latest
+        ports:
+        - containerPort: 8032
+        env:
+        - name: MCP_HOST
+          value: "0.0.0.0"
+        - name: MCP_PORT
+          value: "8032"
+        - name: MCP_PATH
+          value: "/mcp/"
+        - name: MCP_DATA_DIR
+          value: "/app/data"
+        - name: MCP_WORKERS
+          value: "2"
+        - name: MCP_LOG_LEVEL
+          value: "info"
+        volumeMounts:
+        - name: mitre-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /mcp/
+            port: 8032
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /mcp/
+            port: 8032
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: mitre-data
+        persistentVolumeClaim:
+          claimName: mitre-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mitre-attack-mcp-service
+spec:
+  selector:
+    app: mitre-attack-mcp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8032
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mitre-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

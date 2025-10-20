@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "mitre-attack-local": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mitre_attack_mcp.server"
+      ],
+      "env": {
+        "MCP_DATA_DIR": "./mitre-attack-data"
+      }
+    },
+    "mitre-attack-remote": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-everything"
+      ],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:8032/mcp/"
+      }
+    }
+  }
+}

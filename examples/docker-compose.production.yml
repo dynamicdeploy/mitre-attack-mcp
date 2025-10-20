@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mitre-attack-mcp:
+    build: .
+    ports:
+      - "8032:8032"
+    environment:
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8032
+      - MCP_PATH=/mcp/
+      - MCP_DATA_DIR=/app/data
+      - MCP_WORKERS=4
+      - MCP_LOG_LEVEL=info
+    volumes:
+      # Persist MITRE ATT&CK data
+      - mitre_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8032/mcp/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Optional: Add a reverse proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - mitre-attack-mcp
+    restart: unless-stopped
+
+volumes:
+  mitre_data:
