@@ -1658,16 +1658,36 @@ def run_as_http(host, port):
     
     logger.info(f"Starting HTTP server on {host}:{port}")
     
-    # Set up signal handlers
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    
     try:
         # Create ASGI application
         app = mcp.http_app()
         
         # Run the ASGI application with uvicorn
-        uvicorn.run(app, host=host, port=port, log_level="info")
+        # Configure uvicorn to handle signals properly
+        config = uvicorn.Config(
+            app, 
+            host=host, 
+            port=port, 
+            log_level="info",
+            access_log=True,
+            # Enable graceful shutdown
+            lifespan="on"
+        )
+        server = uvicorn.Server(config)
+        
+        # Set up signal handlers for graceful shutdown
+        def shutdown_handler(signum, frame):
+            logger.info(f"Received signal {signum}, shutting down HTTP server...")
+            print(f"\n🛑 HTTP server shutdown requested (signal {signum})")
+            print("👋 Goodbye!")
+            server.should_exit = True
+            
+        signal.signal(signal.SIGINT, shutdown_handler)
+        signal.signal(signal.SIGTERM, shutdown_handler)
+        
+        # Run the server
+        server.run()
+        
     except KeyboardInterrupt:
         logger.info("HTTP server interrupted by user")
         print("\n🛑 HTTP server shutdown requested by user (Ctrl+C)")
@@ -1714,6 +1734,23 @@ def main():
         )
 
         args = parser.parse_args()
+        
+        # Override with environment variables if provided
+        if os.getenv("MCP_HOST"):
+            args.host = os.getenv("MCP_HOST")
+            logger.info(f"Overriding host with MCP_HOST: {args.host}")
+        
+        if os.getenv("MCP_PORT"):
+            args.port = int(os.getenv("MCP_PORT"))
+            logger.info(f"Overriding port with MCP_PORT: {args.port}")
+        
+        if os.getenv("MCP_TRANSPORT"):
+            args.transport = os.getenv("MCP_TRANSPORT")
+            logger.info(f"Overriding transport with MCP_TRANSPORT: {args.transport}")
+        
+        if os.getenv("MCP_DATA_DIR"):
+            args.data_dir = os.getenv("MCP_DATA_DIR")
+            logger.info(f"Overriding data directory with MCP_DATA_DIR: {args.data_dir}")
         logger.info(f"Using data directory: {args.data_dir}")
         logger.info(f"Transport: {args.transport}")
         if args.transport == "http":

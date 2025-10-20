@@ -1,17 +1,16 @@
 services:
   mitre-attack-mcp:
     build: .
+    container_name: mitre-attack-mcp
     ports:
       - "8032:8032"
     environment:
       - MCP_HOST=0.0.0.0
       - MCP_PORT=8032
-      - MCP_PATH=/mcp/
+      - MCP_TRANSPORT=http
       - MCP_DATA_DIR=/app/data
-      - MCP_WORKERS=1
     volumes:
-      # Persist MITRE ATT&CK data
-      - mitre_data:/app/data
+      - mitre-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8032/mcp/"]
@@ -21,4 +20,5 @@ services:
       start_period: 40s
 
 volumes:
-  mitre_data:
+  mitre-data:
+    driver: local

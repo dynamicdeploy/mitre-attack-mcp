@@ -27,16 +27,16 @@ A Model Context Protocol (MCP) server that provides access to the MITRE ATT&CK k
 2. **Run the server locally**:
    ```bash
    # STDIO transport (for MCP clients)
-   python -m mitre_attack_mcp.server
+   python src/mitre_attack_mcp/server.py
    
    # HTTP transport (for web access)
-   python http_server.py
+   python src/mitre_attack_mcp/server.py --transport http
    ```
 
 3. **Test the server**:
    ```bash
    # Test HTTP endpoint
-   curl http://localhost:8032/mcp/
+   curl http://localhost:8032/
    ```
 
 ### 🚀 Quick Configuration Reference
@@ -44,27 +44,30 @@ A Model Context Protocol (MCP) server that provides access to the MITRE ATT&CK k
 | Setting | Environment Variable | Default | Description |
 |---------|---------------------|---------|-------------|
 | **Data Directory** | `MCP_DATA_DIR` | Auto-detected | Where MITRE ATT&CK data is stored |
-| **Workers** | `MCP_WORKERS` | `1` | Number of worker processes |
-| **Port** | `MCP_PORT` | `8032` | Server port |
-| **Host** | `MCP_HOST` | `0.0.0.0` | Server host |
+| **Transport** | `MCP_TRANSPORT` | `stdio` | Transport protocol (stdio/http) |
+| **Port** | `MCP_PORT` | `8032` | Server port (HTTP only) |
+| **Host** | `MCP_HOST` | `0.0.0.0` | Server host (HTTP only) |
 
 **Quick Examples:**
 ```bash
-# Development (low memory)
-MCP_WORKERS=1 python start_server.py
+# STDIO transport (for MCP clients)
+python src/mitre_attack_mcp/server.py
 
-# Production (high performance)
-MCP_WORKERS=4 MCP_DATA_DIR=/shared/data python start_server.py
+# HTTP transport
+python src/mitre_attack_mcp/server.py --transport http
+
+# With environment variables
+MCP_TRANSPORT=http MCP_PORT=8080 python src/mitre_attack_mcp/server.py
 
 # Custom data location
-MCP_DATA_DIR=/custom/path python start_server.py
+MCP_DATA_DIR=/custom/path python src/mitre_attack_mcp/server.py
 ```
 
 ### HTTP Deployment
 
 1. **Start the HTTP server**:
    ```bash
-   python http_server.py
+   python src/mitre_attack_mcp/server.py --transport http
    ```
 
 2. **Access the server**:
@@ -83,8 +86,7 @@ Add this to your `claude_desktop_config.json` file:
     "mitre-attack": {
       "command": "python",
       "args": [
-        "-m",
-        "mitre_attack_mcp.server"
+        "src/mitre_attack_mcp/server.py"
       ],
       "env": {
         "MCP_DATA_DIR": "~/Documents/mitre-attack-data"
@@ -179,7 +181,7 @@ docker run -p 8032:8032 mitre-attack-mcp
 docker-compose up -d
 
 # Production
-docker-compose -f examples/docker-compose.production.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
 ### 2. Kubernetes Deployment
@@ -222,20 +224,17 @@ docker-compose -f examples/docker-compose.production.yml up -d
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MCP_HOST` | `0.0.0.0` | Host to bind the server to |
-| `MCP_PORT` | `8032` | Port to bind the server to |
-| `MCP_PATH` | `/mcp/` | Custom path for the MCP endpoint |
+| `MCP_HOST` | `0.0.0.0` | Host to bind the server to (HTTP only) |
+| `MCP_PORT` | `8032` | Port to bind the server to (HTTP only) |
+| `MCP_TRANSPORT` | `stdio` | Transport protocol (stdio/http) |
 | `MCP_DATA_DIR` | Auto-detected | Path to MITRE ATT&CK data directory |
-| `MCP_WORKERS` | `1` | Number of worker processes |
-| `MCP_LOG_LEVEL` | `info` | Logging level |
-| `MCP_AUTH_TOKEN` | None | Authentication token for secure access |
 
 ### 📁 MCP_DATA_DIR - Data Storage Configuration
 
 The `MCP_DATA_DIR` environment variable controls where MITRE ATT&CK STIX data files are stored and loaded from.
 
 #### **Default Behavior:**
-- **All Platforms**: `~/Documents/mitre-attack-data`
+- **All Platforms**: Auto-detected based on server location
 
 #### **Data Structure:**
 ```
@@ -249,7 +248,7 @@ The `MCP_DATA_DIR` environment variable controls where MITRE ATT&CK STIX data fi
 #### **Usage Examples:**
 ```bash
 # Use custom data directory
-MCP_DATA_DIR=/custom/path python start_server.py
+MCP_DATA_DIR=/custom/path python src/mitre_attack_mcp/server.py
 
 # Docker with persistent data
 docker run -v /host/data:/app/data -e MCP_DATA_DIR=/app/data mitre-attack-mcp
@@ -258,71 +257,8 @@ docker run -v /host/data:/app/data -e MCP_DATA_DIR=/app/data mitre-attack-mcp
 #### **Important Notes:**
 - Data is automatically downloaded on first run if not present
 - Each domain (enterprise, mobile, ics) requires ~50-100MB of storage
-- Data is stored in your Documents folder for easy access
-- Custom paths must be writable by the server process
 - Data persists between server restarts
-
-### ⚙️ MCP_WORKERS - Performance Configuration
-
-The `MCP_WORKERS` environment variable controls the number of Uvicorn worker processes for handling concurrent requests.
-
-#### **Performance Characteristics:**
-
-| Workers | Memory Usage | Concurrency | Use Case |
-|---------|-------------|-------------|----------|
-| `1` | ~500MB | Low | Development, testing |
-| `2-4` | ~1-2GB | Medium | Small production |
-| `4+` | ~2GB+ | High | Large production |
-
-#### **Usage Examples:**
-```bash
-# Development (single process)
-MCP_WORKERS=1 python start_server.py
-
-# Production (multiple processes)
-MCP_WORKERS=4 python start_server.py
-
-# Auto-scale based on CPU cores
-MCP_WORKERS=0 python start_server.py
-```
-
-#### **⚠️ Important Limitations:**
-
-1. **Memory Overhead**: Each worker loads the full MITRE ATT&CK dataset (~500MB per worker)
-2. **No Data Sharing**: Workers operate independently - no coordination
-3. **Startup Time**: Each worker downloads/loads data independently
-4. **Resource Usage**: Memory usage scales linearly with worker count
-
-#### **Recommended Settings:**
-
-**Development:**
-```bash
-MCP_WORKERS=1  # Single process, lower memory usage
-```
-
-**Production (Small):**
-```bash
-MCP_WORKERS=2  # Good balance of performance and memory
-```
-
-**Production (Large):**
-```bash
-MCP_WORKERS=4  # High concurrency, requires 2GB+ RAM
-```
-
-#### **Memory Requirements:**
-- **Minimum**: 1GB RAM (1 worker)
-- **Recommended**: 2GB RAM (2-4 workers)
-- **High Performance**: 4GB+ RAM (4+ workers)
-
-#### **Monitoring:**
-```bash
-# Check memory usage
-ps aux | grep start_server
-
-# Monitor worker processes
-htop -p $(pgrep -f start_server)
-```
+- Custom paths must be writable by the server process
 
 ## Available Tools
 
@@ -387,7 +323,7 @@ from mcp.client.stdio import stdio_client
 
 async with stdio_client(StdioServerParameters(
     command="python",
-    args=["-m", "mitre_attack_mcp.server"]
+    args=["src/mitre_attack_mcp/server.py"]
 )) as (read, write):
     async with ClientSession(read, write) as session:
         # List available tools
@@ -483,7 +419,7 @@ poetry run pytest --cov=src
 2. **Port already in use**:
    ```bash
    # Use a different port
-   python start_server.py --port 8080
+   python src/mitre_attack_mcp/server.py --port 8080
    ```
 
 3. **Import errors**:
@@ -512,7 +448,7 @@ poetry run pytest --cov=src
    
    # Force re-download
    rm -rf $MCP_DATA_DIR/v*
-   python start_server.py
+   python src/mitre_attack_mcp/server.py
    ```
 
 6. **Custom data directory not working**:
@@ -523,69 +459,38 @@ poetry run pytest --cov=src
    
    # Set environment variable
    export MCP_DATA_DIR=/custom/path
-   python start_server.py
-   ```
-
-### MCP_WORKERS Issues
-
-7. **High memory usage**:
-   ```bash
-   # Check memory usage
-   ps aux | grep start_server | awk '{print $4, $6}'
-   
-   # Reduce workers
-   MCP_WORKERS=1 python start_server.py
-   ```
-
-8. **Server not starting with multiple workers**:
-   ```bash
-   # Check system resources
-   free -h
-   nproc
-   
-   # Start with fewer workers
-   MCP_WORKERS=2 python start_server.py
-   ```
-
-9. **Slow startup with multiple workers**:
-   ```bash
-   # Each worker downloads data independently
-   # Pre-download data to speed up startup
-   MCP_DATA_DIR=/shared/data python start_server.py
+   python src/mitre_attack_mcp/server.py
    ```
 
 ### Performance Optimization
 
-10. **Optimize for production**:
-    ```bash
-    # Use shared data directory
-    MCP_DATA_DIR=/shared/mitre-data
-    
-    # Start with appropriate worker count
-    MCP_WORKERS=2  # For 2GB RAM
-    MCP_WORKERS=4  # For 4GB+ RAM
-    ```
+7. **Optimize for production**:
+   ```bash
+   # Use shared data directory
+   MCP_DATA_DIR=/shared/mitre-data
+   python src/mitre_attack_mcp/server.py --transport http
+   ```
 
-11. **Monitor resource usage**:
-    ```bash
-    # Monitor memory
-    watch -n 1 'ps aux | grep start_server'
-    
-    # Monitor CPU
-    htop -p $(pgrep -f start_server)
-    ```
+8. **Monitor resource usage**:
+   ```bash
+   # Monitor memory
+   watch -n 1 'ps aux | grep server.py'
+   
+   # Monitor CPU
+   htop -p $(pgrep -f server.py)
+   ```
 
 ### Logs and Debugging
 
 ```bash
 # Run with debug logging
-python start_server.py --log-level debug
+python src/mitre_attack_mcp/server.py --transport http
 
 # Check server status
-curl -v http://localhost:8032/mcp/
+curl -v http://localhost:8032/
 
-# Check worker processes
-ps aux | grep start_server
+# Check server processes
+ps aux | grep server.py
 ```
 
 ## Security Considerations
@@ -599,9 +504,9 @@ For production deployment:
 
 ## Performance Tuning
 
-- **Multiple workers**: Use `--workers 4` for better concurrency
+- **HTTP transport**: Use `--transport http` for better concurrency
 - **Data caching**: MITRE ATT&CK data is cached locally after first download
-- **Memory usage**: Each worker process loads the full MITRE ATT&CK dataset
+- **Memory usage**: Server loads the full MITRE ATT&CK dataset once
 
 ## Contributing
 
