@@ -1,0 +1,47 @@
+# MITRE ATT&CK MCP Server Dockerfile with SSL Support
+FROM python:3.13-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MCP_HOST=0.0.0.0
+ENV MCP_PORT=8032
+ENV MCP_TRANSPORT=https
+ENV MCP_SERVER_URL=https://localhost:8032
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including OpenSSL
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements.txt for dependency management
+COPY requirements.txt ./
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY src/ ./src/
+COPY examples/ ./examples/
+COPY mitre-crew.py ./
+
+# Create directories for SSL certificates
+RUN mkdir -p /app/ssl /app/data
+
+# Set data directory environment variable
+ENV MCP_DATA_DIR=/app/data
+
+# Expose port
+EXPOSE 9443
+
+# Health check (using HTTPS)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -k -f https://localhost:9443/mcp/ || exit 1
+
+# Run the server with HTTPS
+CMD ["python", "src/mitre_attack_mcp/server.py", "--transport", "https", "--host", "0.0.0.0", "--port", "9443", "--ssl-cert", "/app/ssl/hd_app_ssl_server.crt", "--ssl-key", "/app/ssl/hd_app_ssl_server.key"]

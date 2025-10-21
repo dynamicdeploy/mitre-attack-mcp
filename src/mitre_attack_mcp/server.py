@@ -1657,6 +1657,7 @@ def run_as_http(host, port):
     import uvicorn
     
     logger.info(f"Starting HTTP server on {host}:{port}")
+    print(f"🌐 Starting HTTP server on {host}:{port}")
     
     try:
         # Create ASGI application
@@ -1698,6 +1699,64 @@ def run_as_http(host, port):
         raise
 
 
+def run_as_https(host, port, ssl_cert, ssl_key):
+    """Run the MCP server as an HTTPS server using uvicorn with SSL"""
+    import uvicorn
+    
+    logger.info(f"Starting HTTPS server on {host}:{port} with SSL")
+    print(f"🔒 Starting HTTPS server on {host}:{port}")
+    
+    # Validate SSL files exist
+    if not os.path.exists(ssl_cert):
+        logger.error(f"SSL certificate file not found: {ssl_cert}")
+        print(f"❌ Error: SSL certificate file not found: {ssl_cert}")
+        sys.exit(1)
+    
+    if not os.path.exists(ssl_key):
+        logger.error(f"SSL key file not found: {ssl_key}")
+        print(f"❌ Error: SSL key file not found: {ssl_key}")
+        sys.exit(1)
+    
+    try:
+        # Create ASGI application
+        app = mcp.http_app()
+        
+        # Configure uvicorn with SSL
+        config = uvicorn.Config(
+            app,
+            host=host,
+            port=port,
+            log_level="info",
+            access_log=True,
+            lifespan="on",
+            ssl_certfile=ssl_cert,
+            ssl_keyfile=ssl_key
+        )
+        server = uvicorn.Server(config)
+        
+        # Set up signal handlers for graceful shutdown
+        def shutdown_handler(signum, frame):
+            logger.info(f"Received signal {signum}, shutting down HTTPS server...")
+            print(f"\n🛑 HTTPS server shutdown requested (signal {signum})")
+            print("👋 Goodbye!")
+            server.should_exit = True
+            
+        signal.signal(signal.SIGINT, shutdown_handler)
+        signal.signal(signal.SIGTERM, shutdown_handler)
+        
+        # Run the server
+        server.run()
+        
+    except KeyboardInterrupt:
+        logger.info("HTTPS server interrupted by user")
+        print("\n🛑 HTTPS server shutdown requested by user (Ctrl+C)")
+        print("👋 Goodbye!")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"HTTPS server error: {str(e)}")
+        raise
+
+
 def main():
     logger.info("Starting MITRE ATT&CK MCP Server")
     
@@ -1716,7 +1775,7 @@ def main():
         parser.add_argument(
             "--transport",
             "-t",
-            choices=["stdio", "http"],
+            choices=["stdio", "http", "https"],
             default="stdio",
             help="Transport protocol to use. Defaults to stdio.",
         )
@@ -1731,6 +1790,14 @@ def main():
             type=int,
             default=8032,
             help="Port to bind the server to. Defaults to 8032.",
+        )
+        parser.add_argument(
+            "--ssl-cert",
+            help="Path to SSL certificate file for HTTPS transport.",
+        )
+        parser.add_argument(
+            "--ssl-key",
+            help="Path to SSL private key file for HTTPS transport.",
         )
 
         args = parser.parse_args()
@@ -1791,6 +1858,13 @@ def main():
         if args.transport == "http":
             logger.info("Starting MCP server with HTTP transport")
             run_as_http(args.host, args.port)
+        elif args.transport == "https":
+            logger.info("Starting MCP server with HTTPS transport")
+            if not args.ssl_cert or not args.ssl_key:
+                logger.error("SSL certificate and key are required for HTTPS transport")
+                print("❌ Error: --ssl-cert and --ssl-key are required for HTTPS transport")
+                sys.exit(1)
+            run_as_https(args.host, args.port, args.ssl_cert, args.ssl_key)
         else:
             logger.info("Starting MCP server with stdio transport")
             try:

@@ -1,0 +1,27 @@
+services:
+  mitre-attack-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.ssl
+    container_name: mitre-attack-mcp-ssl
+    ports:
+      - "9443:9443"
+    environment:
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=9443
+      - MCP_TRANSPORT=https
+      - MCP_DATA_DIR=/app/data
+    volumes:
+      - mitre-data:/app/data
+      - ./ssl:/app/ssl:ro  # Mount SSL certificates as read-only
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:9443/mcp/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mitre-data:
+    driver: local
