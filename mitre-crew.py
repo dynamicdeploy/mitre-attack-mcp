@@ -4,10 +4,13 @@ import os
 import click
 import random
 from crewai_tools import MCPServerAdapter
+from dotenv import load_dotenv
+load_dotenv(override=True)
 # Initialize LLM (only when needed)
 def get_llm():
     """Get LLM instance with Ollama."""
-    return LLM(model="ollama/gemma3:4b", temperature=0.1, base_url="http://localhost:11434")
+   # return LLM(model="ollama/gemma3:4b", temperature=0.1, base_url="http://localhost:11434")
+    return LLM(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY"), temperature=0.1)
 
 # MITRE ATT&CK MCP Server configuration
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:8032/mcp")
@@ -161,6 +164,7 @@ def create_mitre_analyst(mcp_tools):
         You specialize in threat actor profiling, malware analysis, and technique mapping.""",
         llm=llm,
         tools=mcp_tools,
+        max_iter=3,
         verbose=True
     )
 
