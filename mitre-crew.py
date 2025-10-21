@@ -238,7 +238,7 @@ def create_tasks_with_prompts(prompts: dict, crew_instance, scenario_type: str):
             description=prompts.get("threat_actor_profiling", "Perform comprehensive threat actor group analysis."),
             expected_output="""Comprehensive threat actor intelligence report covering:
             1. Group information, aliases, and attribution
-            2. Detailed TTP analysis mapped to MITRE ATT&CK techniques
+            2. Detailed TTP analysis mapped to MITRE ATT&CK techniques (format as table with columns: Technique ID, Name, Description)
             3. Associated malware and tools used
             4. Campaigns attributed to the group
             5. Target sectors and platforms
@@ -253,7 +253,7 @@ def create_tasks_with_prompts(prompts: dict, crew_instance, scenario_type: str):
             expected_output="""Detailed malware intelligence report including:
             1. Malware family overview and variants
             2. Capabilities and functionality analysis
-            3. MITRE ATT&CK technique mapping
+            3. MITRE ATT&CK technique mapping (format as table with columns: Technique ID, Name, Description)
             4. Target platforms and operating systems
             5. Associated threat actor groups
             6. Detection and mitigation recommendations
@@ -267,7 +267,7 @@ def create_tasks_with_prompts(prompts: dict, crew_instance, scenario_type: str):
             1. Campaign details, aliases, and attribution
             2. Timeline and evolution analysis
             3. Target sectors and organizations
-            4. Techniques and software used
+            4. Techniques and software used (format techniques as table with columns: Technique ID, Name, Description)
             5. Associated threat actor groups
             6. Campaign-specific TTP analysis
             7. Defensive recommendations and mitigations""",
