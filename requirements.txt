@@ -45,6 +45,7 @@ GitPython==3.1.45
 h11==0.14.0
 hd-logging==1.0.1
 httpcore==1.0.7
+httptools==0.7.1
 httpx==0.28.1
 httpx-sse==0.4.0
 idna==3.10
@@ -72,7 +73,7 @@ mccabe==0.7.0
 mcp==1.16.0
 mdurl==0.1.2
 mitre-attack==1.0.1
--e git+https://github.com/dynamicdeploy/mitre-attack-mcp.git@c2b6181860410501f328663cec55522cfc102e98#egg=mitre_attack_mcp
+-e git+https://github.com/dynamicdeploy/mitre-attack-mcp.git@2e56727a854fc466c030aa0c5191316ed15ea900#egg=mitre_attack_mcp
 mitreattack-python==5.0.0
 mixbox==1.0.5
 more-itertools==10.8.0
@@ -98,8 +99,6 @@ pkginfo==1.12.1.2
 platformdirs==4.3.7
 pluggy==1.5.0
 pluralizer==1.2.0
-poetry==2.2.1
-poetry-core==2.2.1
 pooch==1.8.2
 pycodestyle==2.13.0
 pycountry==24.6.1
@@ -161,10 +160,13 @@ typing_extensions==4.15.0
 tzdata==2025.2
 uri-template==1.3.0
 urllib3==2.3.0
-uvicorn==0.34.0
+uvicorn==0.38.0
+uvloop==0.22.1
 virtualenv==20.35.3
+watchfiles==1.1.1
 weakrefmethod==1.0.3
 webcolors==24.11.1
+websockets==15.0.1
 Werkzeug==3.1.1
 wheel-filename==1.4.2
 win32_setctime==1.2.0

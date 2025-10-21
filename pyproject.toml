@@ -12,13 +12,10 @@ dependencies = [
     "fastmcp>=2.12.5",
     "uvicorn",
     "fastapi",
-    "hd-logging (>=1.0.1,<2.0.0)",
+    "hd-logging>=1.0.1,<2.0.0",
     "crewai>=1.0.0,<2.0.0"
 ]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[project.scripts]
-mitre-attack-mcp = "mitre_attack_mcp.server:main"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

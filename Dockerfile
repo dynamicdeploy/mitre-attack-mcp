@@ -16,13 +16,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy pyproject.toml and poetry.lock for dependency management
-COPY pyproject.toml poetry.lock ./
+# Copy requirements.txt for dependency management
+COPY requirements.txt ./
 
-# Install Poetry and dependencies
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --only=main --no-root
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY src/ ./src/
