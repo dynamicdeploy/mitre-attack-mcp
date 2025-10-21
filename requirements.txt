@@ -5,3 +5,4 @@ fastapi
 hd-logging
 crewai
 langchain-openai
+click
