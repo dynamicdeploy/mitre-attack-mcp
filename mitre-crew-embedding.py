@@ -18,8 +18,123 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from hd_logging import setup_logger
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich import print as rprint
+from typing import Any
+import json
 
 logger = setup_logger(__name__, log_file_path="logs/mitre-crew-embedding.log")
+console = Console()
+
+# Callback functions for CrewAI execution monitoring
+def log_task_output(task_output: Any):
+    """Log task output with rich formatting."""
+    try:
+        console.print("\n" + "="*80)
+        console.print(Panel.fit(
+            "[bold blue]📋 TASK COMPLETION CALLBACK[/bold blue]",
+            border_style="blue"
+        ))
+        
+        if task_output is not None:
+            # Create a table for task output details
+            table = Table(title="Task Output Details", show_header=True, header_style="bold magenta")
+            table.add_column("Property", style="cyan", no_wrap=True)
+            table.add_column("Value", style="white")
+            
+            # Get object type
+            obj_type = type(task_output).__name__
+            table.add_row("Object Type", obj_type)
+            
+            # Get attributes if available
+            if hasattr(task_output, '__dict__'):
+                attributes = task_output.__dict__
+                table.add_row("Attributes Count", str(len(attributes)))
+                
+                # Show key attributes
+                for key, value in list(attributes.items())[:5]:  # Show first 5 attributes
+                    if isinstance(value, str) and len(value) > 100:
+                        value = value[:100] + "..."
+                    table.add_row(f"  {key}", str(value))
+            else:
+                table.add_row("Attributes", "N/A (object may lack __dict__)")
+            
+            # Show string representation if it's not too long
+            str_repr = str(task_output)
+            if len(str_repr) > 200:
+                str_repr = str_repr[:200] + "..."
+            table.add_row("String Representation", str_repr)
+            
+            console.print(table)
+            
+            # Log to file
+            logger.info(f"Task output received: {obj_type}")
+            logger.info(f"Task output attributes: {getattr(task_output, '__dict__', 'N/A')}")
+            
+        else:
+            console.print(Panel.fit(
+                "[bold red]❌ Received None object[/bold red]",
+                border_style="red"
+            ))
+            logger.warning("Task callback received None object")
+    except Exception as e:
+        logger.error(f"Task callback failed: {e}")
+
+def log_step_output(step_output: Any):
+    """Log step output with rich formatting."""
+    try:
+        console.print("\n" + "="*80)
+        console.print(Panel.fit(
+            "[bold green]🔄 STEP EXECUTION CALLBACK[/bold green]",
+            border_style="green"
+        ))
+        
+        if step_output is not None:
+            # Create a table for step output details
+            table = Table(title="Step Output Details", show_header=True, header_style="bold magenta")
+            table.add_column("Property", style="cyan", no_wrap=True)
+            table.add_column("Value", style="white")
+            
+            # Get object type
+            obj_type = type(step_output).__name__
+            table.add_row("Object Type", obj_type)
+            
+            # Get attributes if available
+            if hasattr(step_output, '__dict__'):
+                attributes = step_output.__dict__
+                table.add_row("Attributes Count", str(len(attributes)))
+                
+                # Show key attributes
+                for key, value in list(attributes.items())[:5]:  # Show first 5 attributes
+                    if isinstance(value, str) and len(value) > 100:
+                        value = value[:100] + "..."
+                    table.add_row(f"  {key}", str(value))
+            else:
+                table.add_row("Attributes", "N/A (object may lack __dict__)")
+            
+            # Show string representation if it's not too long
+            str_repr = str(step_output)
+            if len(str_repr) > 200:
+                str_repr = str_repr[:200] + "..."
+            table.add_row("String Representation", str_repr)
+            
+            console.print(table)
+            
+            # Log to file
+            logger.info(f"Step output received: {obj_type}")
+            logger.info(f"Step output attributes: {getattr(step_output, '__dict__', 'N/A')}")
+            
+        else:
+            console.print(Panel.fit(
+                "[bold red]❌ Received None object[/bold red]",
+                border_style="red"
+            ))
+            logger.warning("Step callback received None object")
+    except Exception as e:
+        logger.error(f"Step callback failed: {e}")
 
 # Initialize LLM (only when needed)
 def get_llm():
@@ -29,7 +144,7 @@ def get_llm():
         model="gpt-4o-mini", 
         api_key=os.getenv("OPENAI_API_KEY"), 
         temperature=0.1,
-        max_tokens=2000,  # Limit output tokens to reduce context
+        max_tokens=1000,  # Aggressively limit output tokens
         timeout=30,  # Reduce timeout to prevent long waits
         top_p=0.9  # Add top_p for better response quality
     )
@@ -413,13 +528,15 @@ class MitreThreatIntelligenceCrew:
             - You focus on the most relevant techniques rather than comprehensive coverage
             - You use targeted searches (get_techniques_by_tactic, get_software_by_alias) instead of bulk retrieval
             - You avoid get_all_* functions that return massive datasets
-            - You use embedding-based context compression to optimize analysis efficiency""",
+            - You use embedding-based context compression to optimize analysis efficiency
+            - CRITICAL: If you receive more than 10,000 characters of data, STOP and summarize what you have
+            - NEVER use bulk retrieval functions - they will cause token limit errors
+            - ALWAYS prioritize the most critical 3-5 pieces of information only""",
             llm=self.llm,
             tools=self.get_mcp_tools(),  # Get all available MCP tools
             verbose=VERBOSE,
-            max_iter=MAX_ITER,
-            respect_context_window=True,
-            inject_date = True
+            max_iter=MAX_ITER
+            
         )
 
 def create_tasks_with_prompts(prompts: dict, crew_instance, scenario_type: str):
@@ -669,11 +786,14 @@ def main(scenario_type, scenario_index, custom_scenario, list_scenarios, interac
     context_instructions = """
     
     CRITICAL TOKEN LIMIT MANAGEMENT:
-    - Maximum 150,000 tokens total (you're currently at risk of exceeding this)
+    - Maximum 50,000 tokens total (you're currently at risk of exceeding this)
     - Use ONLY 3-5 most relevant techniques maximum
     - Focus on quality over quantity
     - Use targeted queries, avoid bulk data retrieval
     - If you hit token limits, prioritize the most critical information
+    - STOP if you receive more than 5,000 characters of data from any single query
+    - NEVER use get_all_* functions - they will cause immediate failure
+    - ALWAYS summarize and compress any large data immediately
     """
     
     # Add context instructions to all prompts
@@ -695,11 +815,21 @@ def main(scenario_type, scenario_index, custom_scenario, list_scenarios, interac
         tasks = create_tasks_with_prompts(prompts, crew_instance, scenario_type)
         
         # Create and execute crew
+        console.print(Panel.fit(
+            "[bold yellow]🔧 CREW CONFIGURATION[/bold yellow]\n"
+            "• Task Callbacks: [green]Enabled[/green]\n"
+            "• Step Callbacks: [green]Enabled[/green]\n"
+            "• Rich Formatting: [green]Active[/green]",
+            border_style="yellow"
+        ))
+        
         mitre_crew = Crew(
             agents=[crew_instance.mitre_analyst()],
             tasks=tasks,
             process=Process.sequential,
-            verbose=True
+            verbose=True,
+            task_callback=log_task_output,
+            step_callback=log_step_output
         )
         
         result = mitre_crew.kickoff()
