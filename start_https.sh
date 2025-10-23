@@ -24,7 +24,7 @@ if [ ! -f "docker-compose.ssl.yml" ]; then
 fi
 
 # Start the server
-docker-compose -f docker-compose.ssl.yml up --build
+docker-compose -f docker-compose.ssl.yml up --build "$@"
 
 echo ""
 echo "✅ HTTPS server started successfully!"

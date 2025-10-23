@@ -16,7 +16,7 @@ if [ ! -f "docker-compose.yml" ]; then
 fi
 
 # Start the server
-docker-compose up --build
+docker-compose up --build "$@"
 
 echo ""
 echo "✅ HTTP server started successfully!"

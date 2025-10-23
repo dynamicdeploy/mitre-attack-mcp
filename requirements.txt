@@ -17,7 +17,7 @@ certifi==2025.10.5
 cffi==2.0.0
 charset-normalizer==3.4.4
 chromadb==1.1.1
-click==8.0.4
+click>=8.1.7
 coloredlogs==15.0.1
 colorlog==6.10.1
 colour==0.1.5
@@ -193,7 +193,6 @@ rsa==4.9.1
 safetensors==0.6.2
 scikit-learn==1.7.2
 scipy==1.16.2
-selective-context==0.1.4
 sentence-transformers==5.1.1
 setuptools==80.9.0
 shellingham==1.5.4
@@ -201,7 +200,6 @@ simplejson==3.20.2
 six==1.17.0
 sniffio==1.3.1
 soupsieve==2.8
-spacy==3.8.7
 SQLAlchemy==2.0.44
 sse-starlette==3.0.2
 stack-data==0.6.3
